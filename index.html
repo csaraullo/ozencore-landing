@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RENDEON — Every model. One canvas.</title>
-<meta name="description" content="Rendeon is the node-based AI creative platform for filmmakers. Fifty generation engines — image, video, audio — wired into one production canvas.">
+<title>OZENCORE — Every model. One canvas.</title>
+<meta name="description" content="Ozencore is the node-based AI creative platform for filmmakers. Fifty generation engines — image, video, audio — wired into one production canvas.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -107,7 +107,7 @@ header{
 @keyframes blink{50%{opacity:.15}}
 /* title: staggered letter rise + sheen sweep */
 .hero h1{
-  font-size:clamp(64px,12.5vw,190px);font-weight:800;letter-spacing:.04em;
+  font-size:clamp(54px,10.5vw,164px);font-weight:800;letter-spacing:.04em;
   margin:0 0 10px -5px;display:flex;flex-wrap:wrap;
   will-change:transform;
 }
@@ -339,13 +339,13 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 <div class="cur-ring" aria-hidden="true"></div>
 
 <div id="loader" aria-hidden="true">
-  <div class="lmark">R<span style="color:var(--ember)">Ξ</span>ND<span style="color:var(--ember)">Ξ</span>ON</div>
+  <div class="lmark">OZ<span style="color:var(--ember)">Ξ</span>NCOR<span style="color:var(--ember)">Ξ</span></div>
   <div class="lbar"><i id="lfill"></i></div>
   <div class="lpct" id="lpct">COMPILING GRAPH — 0%</div>
 </div>
 
 <header>
-  <a class="mark" href="#">R<b>Ξ</b>ND<b>Ξ</b>ON</a>
+  <a class="mark" href="#">OZ<b>Ξ</b>NCOR<b>Ξ</b></a>
   <a class="top-cta" href="#waitlist">Join the waitlist</a>
 </header>
 
@@ -358,11 +358,11 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
       <span>SCENE 01 · TAKE 01</span>
       <span id="tc">00:00:00:00</span>
     </div>
-    <h1 id="title" aria-label="RENDEON"></h1>
+    <h1 id="title" aria-label="OZENCORE"></h1>
     <p class="tag reveal r3">Every model. <b>One canvas.</b></p>
     <p class="lede reveal r3">
       AI creation is scattered across a dozen tabs and subscriptions.
-      Rendeon wires <strong>fifty generation engines</strong> — image, video, audio —
+      Ozencore wires <strong>fifty generation engines</strong> — image, video, audio —
       into a single node-based production pipeline. Built by filmmakers, for filmmakers.
     </p>
     <div class="reveal r4">
@@ -389,7 +389,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 <section class="strip-sec">
   <div class="wrap sec-head sr">
     <p class="eyebrow">One canvas, every look</p>
-    <h2>Frames born on <span class="serif-i">Rendeon.</span></h2>
+    <h2>Frames born on <span class="serif-i">Ozencore.</span></h2>
     <p>Different engines, different worlds — the same pipeline underneath.</p>
   </div>
   <div class="filmstrip" aria-hidden="true">
@@ -440,7 +440,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
           <span class="tl">SH_014 · MASTER</span>
           <span class="tr">RENDERED ✓</span>
           <span class="bl">3840 × 2160 · 24 FPS</span>
-          <span class="br">RΞNDΞON</span>
+          <span class="br">OZΞNCORΞ</span>
         </div>
       </div>
     </div>
@@ -465,7 +465,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
     <div class="sec-head sr">
       <p class="eyebrow">Built for production</p>
       <h2>Not a toy. <span class="serif-i">A pipeline.</span></h2>
-      <p>Rendeon is already cutting real shots for real deliveries — so it behaves like production software, not a demo.</p>
+      <p>Ozencore is already cutting real shots for real deliveries — so it behaves like production software, not a demo.</p>
     </div>
     <div class="fgrid sr">
       <div class="fcell">
@@ -503,7 +503,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
       <article>
         <p class="pt">Feature documentary</p>
         <h3>Space-history VFX</h3>
-        <p>Dozens of archival-style shots generated, upscaled and finished through Rendeon graphs for a theatrical documentary.</p>
+        <p>Dozens of archival-style shots generated, upscaled and finished through Ozencore graphs for a theatrical documentary.</p>
       </article>
       <article>
         <p class="pt">Music video</p>
@@ -546,7 +546,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 <footer>
   <div class="wrap">
     <span>© 2026 doodle S.r.l. & AiSolve Ltd. — All rights reserved.</span>
-    <span>RENDEON — formerly known as MONOLITH</span>
+    <span>OZENCORE — formerly known as MONOLITH</span>
   </div>
 </footer>
 
@@ -557,7 +557,7 @@ var reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- hero title letters ---------- */
 var title=document.getElementById('title');
-'RΞNDΞON'.split('').forEach(function(ch,i){
+'OZΞNCORΞ'.split('').forEach(function(ch,i){
   var s=document.createElement('span');
   s.className='L'+(ch==='Ξ'?' e':'');
   s.textContent=ch;
@@ -847,7 +847,7 @@ function onScroll(){
   else if(t<.44){phase.textContent='GRAPH · 2/4';bstep.innerHTML='<b>02</b> — DRIVE IT INTO MOTION'}
   else if(t<.62){phase.textContent='GRAPH · 4/4';bstep.innerHTML='<b>03</b> — UPSCALE · FOLEY · FINISH'}
   else if(t<.74){phase.textContent='RENDERING…';bstep.innerHTML='<b>04</b> — ONE CLICK. ONE PIPELINE.'}
-  else{phase.textContent='MASTER READY ✓';bstep.innerHTML='THIS IS <b>RΞNDΞON</b> — EVERY MODEL, ONE CANVAS'}
+  else{phase.textContent='MASTER READY ✓';bstep.innerHTML='THIS IS <b>OZΞNCORΞ</b> — EVERY MODEL, ONE CANVAS'}
 }
 if(!reduced){
   window.addEventListener('scroll',onScroll,{passive:true});
@@ -892,8 +892,8 @@ function bindForm(formId,msgId){
       headers:{'Content-Type':'application/json',Accept:'application/json'},
       body:JSON.stringify({
         access_key:'1ae57c3b-b7f0-4be3-85e2-44b3f62b55d2',
-        subject:'New RENDEON waitlist signup',
-        from_name:'Rendeon Landing',
+        subject:'New OZENCORE waitlist signup',
+        from_name:'Ozencore Landing',
         email:email
       })
     }).then(function(r){return r.json()}).then(function(data){
