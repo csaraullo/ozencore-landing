@@ -329,6 +329,13 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
   section.feat,section.prod-sec{padding:90px 0}
   .frame{width:300px;height:169px}
 }
+@media(max-width:480px){
+  header{padding:18px}
+  .mark{font-size:15px;letter-spacing:.14em}
+  .top-links{gap:16px}
+  .top-nav{font-size:11px}
+  .top-cta{padding:9px 14px;letter-spacing:.1em}
+}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
   .reveal,.sr,.hero h1 .L{opacity:1;transform:none}
@@ -353,7 +360,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 <header>
   <a class="mark" href="#">OZ<b>Ξ</b>NCOR<b>Ξ</b></a>
   <nav class="top-links">
-    <a class="top-nav" href="/about">About</a>
+    <a class="top-nav" href="/about/">About</a>
     <a class="top-cta" href="#waitlist">Join the waitlist</a>
   </nav>
 </header>
