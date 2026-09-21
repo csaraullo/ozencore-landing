@@ -847,14 +847,24 @@
     // durata del crollo resta la stessa di prima
     mm.add('(min-width: 760px)', function(){ build('top 10%', 'bottom 30%'); });
 
-    // telefono: il blocco aperto e' alto ~1800px, quindi un traguardo legato al
-    // fondo della sezione finirebbe quasi a fine sezione. Traguardo fisso in
-    // pixel: chiuse dopo 900px di scroll, qualunque sia l'altezza.
-    // La partenza NON va anticipata per far finire prima: con 'top 70%' le
-    // schede cominciavano a chiudersi mentre i loro link erano ancora sotto il
-    // bordo dello schermo (misurato: 1027px su 844 di viewport). A 'top 30%'
-    // ogni link e' in campo e aperto quando la sua scheda inizia a chiudersi
-    mm.add('(max-width: 759px)', function(){ build('top 30%', '+=900'); });
+    // telefono: la partenza NON si ancora a una percentuale dello schermo.
+    // La distanza fra la cima della sezione e il link di una scheda e' fissa in
+    // pixel, quindi piu' lo schermo e' corto piu' il link finisce in basso: su
+    // un viewport da 664 (telefono con la barra del browser) il link di Cinema
+    // & VFX cadeva al 90% dell'altezza, cioe' dietro la barra di Safari.
+    // Ancorata invece alla PRIMA SCHEDA: il suo fondo deve essere risalito al
+    // 60% dello schermo prima che il crollo parta. Misurato: il link resta al
+    // 54-56% su schermi alti 560, 664 e 844. Indipendente dall'altezza.
+    // Anche la corsa scala con lo schermo invece di essere fissa in pixel.
+    mm.add('(max-width: 759px)', function(){
+      build(
+        function(){
+          var c = document.querySelector('.card');
+          return c.getBoundingClientRect().bottom + window.scrollY - window.innerHeight * 0.6;
+        },
+        function(){ return '+=' + Math.round(window.innerHeight * 1.2); }
+      );
+    });
   })();
 </script>
 
