@@ -821,8 +821,11 @@
 <script>
   (function(){
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce || window.innerWidth < 760 || typeof gsap === 'undefined') return;
+    if (reduce || typeof gsap === 'undefined') return;
     gsap.registerPlugin(ScrollTrigger);
+    // sui telefoni la barra degli indirizzi che compare e scompare ridimensiona
+    // la pagina a meta' scroll: senza questo ScrollTrigger ricalcola e scatta
+    ScrollTrigger.config({ ignoreMobileResize: true });
     var tl = gsap.timeline({
       scrollTrigger:{
         trigger:'.stack',
