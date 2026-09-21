@@ -849,8 +849,12 @@
 
     // telefono: il blocco aperto e' alto ~1800px, quindi un traguardo legato al
     // fondo della sezione finirebbe quasi a fine sezione. Traguardo fisso in
-    // pixel: le schede sono chiuse dopo 700px di scroll, qualunque sia l'altezza
-    mm.add('(max-width: 759px)', function(){ build('top 70%', '+=700'); });
+    // pixel: chiuse dopo 900px di scroll, qualunque sia l'altezza.
+    // La partenza NON va anticipata per far finire prima: con 'top 70%' le
+    // schede cominciavano a chiudersi mentre i loro link erano ancora sotto il
+    // bordo dello schermo (misurato: 1027px su 844 di viewport). A 'top 30%'
+    // ogni link e' in campo e aperto quando la sua scheda inizia a chiudersi
+    mm.add('(max-width: 759px)', function(){ build('top 30%', '+=900'); });
   })();
 </script>
 
