@@ -842,8 +842,10 @@
 
     var mm = gsap.matchMedia();
 
-    // desktop: identico a prima, non si tocca
-    mm.add('(min-width: 760px)', function(){ build('top 35%', 'bottom 55%'); });
+    // desktop: la chiusura parte piu' tardi (prima cominciava quando la sezione
+    // era ancora a meta' schermo). 'bottom 30%' compensa il ritardo, cosi' la
+    // durata del crollo resta la stessa di prima
+    mm.add('(min-width: 760px)', function(){ build('top 10%', 'bottom 30%'); });
 
     // telefono: il blocco aperto e' alto ~1800px, quindi un traguardo legato al
     // fondo della sezione finirebbe quasi a fine sezione. Traguardo fisso in
