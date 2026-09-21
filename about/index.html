@@ -279,15 +279,18 @@
   .reelband::before{left:0; background:linear-gradient(90deg, #060505 0%, rgba(6,5,5,.92) 35%, rgba(6,5,5,0) 100%)}
   .reelband::after{right:0; background:linear-gradient(270deg, #060505 0%, rgba(6,5,5,.92) 35%, rgba(6,5,5,0) 100%)}
   .reel{
-    overflow-x:auto;
-    overflow-y:hidden;
-    scrollbar-width:none;
+    overflow:hidden;
+    /* la striscia non usa piu' lo scorrimento del browser: la muoviamo noi con
+       una trasformazione. pan-y lascia alla pagina lo scorrimento verticale e
+       consegna a noi il gesto orizzontale */
+    touch-action:pan-y;
     cursor:grab;
     padding-block:24px;
   }
   .reel::-webkit-scrollbar{display:none}
   .reel.dragging{cursor:grabbing}
   .track{
+    will-change:transform;
     display:flex;
     gap:24px;
     padding-inline:50vw;
@@ -877,38 +880,40 @@
     var reel=document.getElementById('reel'), track=document.getElementById('track');
     if(!reel||!track) return;
     var cards=Array.prototype.slice.call(track.children);
-    // triple the list for a seamless loop
-    var unit=0;
+    // tripla la lista per il giro senza cuciture visibili
     function clone(){ cards.forEach(function(c){ track.appendChild(c.cloneNode(true)); }); }
     clone(); clone();
     var all=Array.prototype.slice.call(track.children);
 
+    // POSIZIONE. Non e' piu' reel.scrollLeft. E' un numero nostro che puo'
+    // crescere all'infinito in entrambi i versi e non viene MAI riportato
+    // indietro. Il giro si chiude solo al momento di disegnare, avvolgendo una
+    // copia del valore. Cosi' non esiste piu' nessun "salto" di stato che possa
+    // andare fuori sincrono con il trascinamento o con il disegno: era quello a
+    // rompere la striscia sulla cucitura, che cade sulla 13esima di 25.
+    // Motivo del cambio: assegnare scrollLeft mentre Safari gestisce lo slancio
+    // del dito e' inaffidabile. Ora il browser non tocca piu' niente.
+    var unit=0, pos=0, raf=null, avviato=false;
+
     function measure(){
-      var first=all[0], nth=all[cards.length];
-      unit = nth.offsetLeft - first.offsetLeft;
-      if(!reel.dataset.init && unit){
-        reel.scrollLeft = unit;           // start in the middle copy
-        reel.dataset.init='1';
+      var u = all[cards.length].offsetLeft - all[0].offsetLeft;
+      if(u){
+        unit = u;
+        if(!avviato){ pos = u; avviato=true; }   // si parte dalla copia centrale
       }
     }
-
-    var ticking=false;
+    // riporta un valore qualunque dentro [unit*0.5, unit*1.5): serve solo a
+    // disegnare, la posizione vera resta intatta
+    function avvolgi(v){
+      if(!unit) return v;
+      var lo = unit*0.5;
+      return lo + (((v - lo) % unit) + unit) % unit;
+    }
     function paint(){
-      ticking=false;
-      // PRIMA si riavvolge, POI si disegna. Nell'ordine inverso ogni locandina
-      // riceveva opacita' e scala calcolate sulla posizione precedente al
-      // salto, cioe' lontana una copia intera: tutte finivano al valore minimo
-      // (0.4 e 0.8) e restavano spente fino al ridisegno successivo. Su Chrome
-      // si vedeva uno scatto, su Safari iOS il ridisegno non arriva subito e la
-      // striscia sembrava svuotarsi. Il salto cade sempre sulla stessa
-      // locandina, la 13esima di 25, perche' li' e' la cucitura delle 3 copie
-      if(unit){
-        // durante un trascinamento pointermove ricalcola la posizione da
-        // startLeft: va spostato della stessa quantita', o annulla il salto
-        if(reel.scrollLeft < unit*0.5){ reel.scrollLeft += unit; startLeft += unit; }
-        else if(reel.scrollLeft > unit*1.5){ reel.scrollLeft -= unit; startLeft -= unit; }
-      }
-      var mid = reel.scrollLeft + reel.clientWidth/2;
+      raf=null;
+      var p = avvolgi(pos);
+      track.style.transform = 'translate3d(' + (-p) + 'px,0,0)';
+      var mid = p + reel.clientWidth/2;
       for(var i=0;i<all.length;i++){
         var el=all[i];
         var c = el.offsetLeft + el.offsetWidth/2;
@@ -918,52 +923,62 @@
         el.style.opacity = (0.4 + 0.6*k).toFixed(3);
       }
     }
-    function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(paint); } }
+    function disegna(){ if(!raf) raf = requestAnimationFrame(paint); }
 
-    reel.addEventListener('scroll', onScroll, {passive:true});
-    window.addEventListener('resize', function(){ measure(); paint(); });
+    window.addEventListener('resize', function(){ measure(); disegna(); });
 
-    // drag to scroll, with inertia on release
-    var down=false, startX=0, startLeft=0, lastX=0, lastT=0, vel=0, glide=null, moved=0;
+    // rotellina e trackpad
+    reel.addEventListener('wheel', function(e){
+      var d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if(!d) return;
+      e.preventDefault();
+      stopGlide();
+      pos += d;
+      disegna();
+    }, {passive:false});
+
+    // trascinamento, con inerzia al rilascio
+    var down=false, startX=0, startPos=0, lastX=0, lastT=0, vel=0, glide=null, moved=0;
     function stopGlide(){ if(glide){ cancelAnimationFrame(glide); glide=null; } }
     reel.addEventListener('pointerdown', function(e){
       stopGlide();
-      down=true; startX=e.clientX; startLeft=reel.scrollLeft; moved=0;
+      down=true; startX=e.clientX; startPos=pos; moved=0;
       lastX=e.clientX; lastT=performance.now(); vel=0;
-      reel.classList.add('dragging'); reel.setPointerCapture(e.pointerId);
+      reel.classList.add('dragging');
+      try{ reel.setPointerCapture(e.pointerId); }catch(err){}
     });
     reel.addEventListener('pointermove', function(e){
       if(!down) return;
-      reel.scrollLeft = startLeft - (e.clientX - startX);
+      // startPos non puo' piu' diventare obsoleto: pos non viene mai riavvolto
+      pos = startPos - (e.clientX - startX);
       moved = Math.max(moved, Math.abs(e.clientX - startX));
       var now=performance.now(), dt=now-lastT;
       if(dt>0){ vel = 0.8*vel + 0.2*((e.clientX-lastX)/dt); lastX=e.clientX; lastT=now; }
+      disegna();
     });
     function release(){
       if(!down) return;
       down=false; reel.classList.remove('dragging');
       if(Math.abs(vel) < 0.05) return;
-      var v = vel*16;                       // px per frame
-      var prev = performance.now();
+      var v = vel*16, prev = performance.now();
       (function glideStep(now){
         var k = Math.min((now-prev)/16, 3); prev = now;
-        reel.scrollLeft -= v*k;
-        v *= Math.pow(0.94, k);             // friction
-        if(Math.abs(v) > 0.2) glide = requestAnimationFrame(glideStep);
-        else glide = null;
+        pos -= v*k;
+        v *= Math.pow(0.94, k);
+        paint();
+        glide = (Math.abs(v) > 0.2) ? requestAnimationFrame(glideStep) : null;
       })(prev);
     }
     ['pointerup','pointercancel','pointerleave'].forEach(function(ev){
       reel.addEventListener(ev, release);
     });
-    // ora le locandine sono link: il browser non deve avviare il proprio drag
-    // del link, e un click che arriva alla fine di un trascinamento non deve
-    // aprire IMDb
+
+    // le locandine sono link: niente drag nativo del browser, e un click che
+    // arriva alla fine di un trascinamento non deve aprire IMDb
     reel.addEventListener('dragstart', function(e){ e.preventDefault(); });
     reel.addEventListener('click', function(e){
       if(moved > 6){ e.preventDefault(); e.stopPropagation(); }
     }, true);
-    reel.addEventListener('wheel', stopGlide, {passive:true});
 
     measure(); paint();
     window.addEventListener('load', function(){ measure(); paint(); });
