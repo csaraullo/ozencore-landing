@@ -334,7 +334,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
   .mark{font-size:15px;letter-spacing:.14em}
   .top-links{gap:16px}
   .top-nav{font-size:11px}
-  .top-cta{padding:9px 14px;letter-spacing:.1em}
+  .top-cta{padding:9px 14px;letter-spacing:.1em;white-space:nowrap}
+  .cta-long{display:none}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
@@ -361,7 +362,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
   <a class="mark" href="#">OZ<b>Ξ</b>NCOR<b>Ξ</b></a>
   <nav class="top-links">
     <a class="top-nav" href="/about/">About</a>
-    <a class="top-cta" href="#waitlist">Join the waitlist</a>
+    <a class="top-cta" href="#waitlist"><span class="cta-long">Join the </span>Waitlist</a>
   </nav>
 </header>
 
