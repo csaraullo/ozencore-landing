@@ -456,6 +456,15 @@
     .roll .row{grid-template-columns:1fr}
     .tool{padding:24px}
   }
+
+  /* telefono: dentro la scheda restano 298px utili, e "SET EXTENSION" e
+     "REEL 2026" non ci stanno su una riga: la freccia andava a capo da sola e
+     WATCH LINK si spezzava in due. Tolta l'etichetta ci stanno tutti e sette
+     senza rimpicciolire il corpo. E' decorativa: maiuscolo arancione
+     sottolineato con la freccia si legge gia' come un link */
+  @media (max-width:480px){
+    .card .biglink .see{display:none}
+  }
 </style>
 </head>
 <body>
