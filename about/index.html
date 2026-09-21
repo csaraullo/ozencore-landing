@@ -826,17 +826,29 @@
     // sui telefoni la barra degli indirizzi che compare e scompare ridimensiona
     // la pagina a meta' scroll: senza questo ScrollTrigger ricalcola e scatta
     ScrollTrigger.config({ ignoreMobileResize: true });
-    var tl = gsap.timeline({
-      scrollTrigger:{
-        trigger:'.stack',
-        start:'top 35%',
-        end:'bottom 55%',
-        scrub:1,
-        invalidateOnRefresh:true
-      }
-    });
-    tl.to('.card .text', {height:0, opacity:0, marginTop:0, stagger:0.4, ease:'none'})
-      .to('.card', {marginBottom:-8, stagger:0.4, ease:'none'}, 0);
+    function build(start, end){
+      var tl = gsap.timeline({
+        scrollTrigger:{
+          trigger:'.stack',
+          start:start,
+          end:end,
+          scrub:1,
+          invalidateOnRefresh:true
+        }
+      });
+      tl.to('.card .text', {height:0, opacity:0, marginTop:0, stagger:0.4, ease:'none'})
+        .to('.card', {marginBottom:-8, stagger:0.4, ease:'none'}, 0);
+    }
+
+    var mm = gsap.matchMedia();
+
+    // desktop: identico a prima, non si tocca
+    mm.add('(min-width: 760px)', function(){ build('top 35%', 'bottom 55%'); });
+
+    // telefono: il blocco aperto e' alto ~1800px, quindi un traguardo legato al
+    // fondo della sezione finirebbe quasi a fine sezione. Traguardo fisso in
+    // pixel: le schede sono chiuse dopo 700px di scroll, qualunque sia l'altezza
+    mm.add('(max-width: 759px)', function(){ build('top 70%', '+=700'); });
   })();
 </script>
 
