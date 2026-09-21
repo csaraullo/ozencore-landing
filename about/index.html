@@ -250,6 +250,15 @@
     padding-bottom:4px;
   }
   .biglink:hover{color:var(--cream); border-bottom-color:var(--cream)}
+  /* variante piccola: usata solo dal link al CV nella hero */
+  .biglink.sm{
+    font-size:clamp(17px,1.8vw,21px);
+    gap:12px;
+    letter-spacing:.08em;
+    border-bottom-width:2px;
+    margin-top:14px;
+  }
+  .biglink.sm .see{font-size:10px; letter-spacing:.18em}
   .biglink .see{
     display:inline;
     font-family:'IBM Plex Mono',ui-monospace,monospace;
@@ -466,7 +475,7 @@
     <p class="lede">I came up on film sets. Then I built the tools I was missing.</p>
     <p class="sub">Twenty years between camera and pipeline: direction, visual effects and 3D for cinema, television and advertising &mdash; and, since 2025, the node-based production platform behind OZENCORE.</p>
     <p class="cvnote">Want to dig deeper? There&rsquo;s a CV too &mdash; the old-fashioned kind.</p>
-    <a class="biglink" href="/about/cv-cristian-saraullo.pdf" target="_blank" rel="noopener">Download the CV &#8599;&#xFE0E;<span class="see">PDF &middot; 3 pages</span></a>
+    <a class="biglink sm" href="/about/cv-cristian-saraullo.pdf" target="_blank" rel="noopener">Download the CV &#8599;&#xFE0E;<span class="see">PDF &middot; 3 pages</span></a>
     <div class="rule"></div>
   </section>
 </div>
