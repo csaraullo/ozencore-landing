@@ -93,6 +93,12 @@ header{
   padding:10px 20px;border-radius:2px;transition:.25s;background:rgba(8,6,4,.4);backdrop-filter:blur(6px);
 }
 .top-cta:hover{border-color:var(--ember);color:var(--hot);box-shadow:0 0 24px rgba(232,137,26,.25)}
+.top-links{display:flex;align-items:center;gap:22px}
+.top-nav{
+  font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  text-decoration:none;color:var(--ash);transition:color .25s;
+}
+.top-nav:hover{color:var(--hot)}
 
 /* ============ HERO ============ */
 .hero{position:relative;min-height:100svh;display:flex;align-items:center;overflow:hidden}
@@ -346,7 +352,10 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 
 <header>
   <a class="mark" href="#">OZ<b>Ξ</b>NCOR<b>Ξ</b></a>
-  <a class="top-cta" href="#waitlist">Join the waitlist</a>
+  <nav class="top-links">
+    <a class="top-nav" href="/about">About</a>
+    <a class="top-cta" href="#waitlist">Join the waitlist</a>
+  </nav>
 </header>
 
 <!-- ================= HERO ================= -->
