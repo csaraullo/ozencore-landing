@@ -32,7 +32,7 @@ Gioco alla Angry Birds ambientato a Roma, in 2D. I romani tirati con la fionda c
 3. ~~Grafica dei materiali (legno, vetro, travertino, metallo, cassonetto), selciato, buca e fionda.~~ Fatto. Gli sfondi per gli altri rioni arriveranno con i nuovi mondi (step 5).
 4. ~~Poteri degli altri personaggi (maranza, tassista, turista).~~ Fatto. Mancano suoni e voci in romanesco (da decidere: registrate da Cristian o voce sintetica).
 5. Altri mondi: Fontana di Trevi, Pantheon, Piazza Venezia, Colosseo con il Re Gabbiano.
-6. Pubblicazione su ozencore: unire il ramo a `main`.
+6. ~~Pubblicazione su ozencore.~~ Fatto il 24/10/2026 come **pagina ghost**: online in `/fionda/` ma senza link dal sito e con `noindex` (fuori da Google). Su `main` è stata copiata solo la cartella `fionda/` (commit separato, non un merge), **senza questo NOTE.md** e **senza `daje/`** (il vecchio runner resta solo sul ramo). Per aggiornare il sito: dal ramo, `git checkout daje-de-fionda -- fionda` su `main`, togliere `fionda/NOTE.md`, commit e push, solo quando Cristian lo chiede. Il sito si pubblica da `main` (Cloudflare).
 
 ## Prova in locale
 Serve un server HTTP: `python3 -m http.server` dalla radice del repo, poi apri `http://localhost:8000/fionda/`.
