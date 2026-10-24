@@ -179,10 +179,10 @@ const BIRDS={
 };
 // hp is in joules of impact energy (0.5 * reduced mass * v^2)
 const MATS={
-  wood:{d:.7,f:.6,hp:9,pts:500,fill:'#cf9454',edge:'#7a4f27'},
-  glass:{d:.5,f:.25,hp:2.5,pts:300,fill:'rgba(178,224,242,.78)',edge:'#4f93b0'},
-  stone:{d:2.4,f:.8,hp:140,pts:800,fill:'#e6d6b2',edge:'#9c8a66'},
-  metal:{d:1.8,f:.45,hp:60,pts:700,fill:'#9fa8ad',edge:'#56606a'},
+  wood:{d:.7,f:.6,hp:9,pts:500,fill:'#cf9454',edge:'#7a4f27',tex:'legno'},
+  glass:{d:.5,f:.25,hp:2.5,pts:300,fill:'rgba(178,224,242,.78)',edge:'#4f93b0',tex:'vetro'},
+  stone:{d:2.4,f:.8,hp:140,pts:800,fill:'#e6d6b2',edge:'#9c8a66',tex:'travertino'},
+  metal:{d:1.8,f:.45,hp:60,pts:700,fill:'#9fa8ad',edge:'#56606a',tex:'metallo'},
   bin:{d:1,f:.6,hp:4,pts:1000,fill:'#3f7a4a',edge:'#244a2c'},
 };
 const FOES={
@@ -490,6 +490,15 @@ const toW=(sx,sy)=>[(sx-cw/2)/cam.s+cam.x,(groundY-sy)/cam.s+cam.y];
 function worldTransform(){const sx=reduceMotion?0:(Math.random()-.5)*shake*14,sy=reduceMotion?0:(Math.random()-.5)*shake*14;
   ctx.setTransform(cam.s*dpr,0,0,-cam.s*dpr,(cw/2-cam.x*cam.s+sx)*dpr,(groundY+cam.y*cam.s+sy)*dpr);}
 function screenTransform(){ctx.setTransform(dpr,0,0,dpr,0,0);}
+const img=src=>{const i=new Image();i.src=src;return i;};
+const ok=i=>i.complete&&i.naturalWidth>0;
+// street props and fort materials cut from the approved sheets (a long beam and a square block per material)
+const OBJ={};for(const n of ['strada','buca','cono','fionda','cassonetto'])OBJ[n]=img(`assets/oggetti/${n}.webp`);
+const TEX={};for(const m of ['legno','vetro','travertino','metallo'])TEX[m]={trave:img(`assets/oggetti/${m}-trave.webp`),blocco:img(`assets/oggetti/${m}-blocco.webp`)};
+// where things sit inside those images, in image pixels
+const STRADA={h:1,top:6};                       // strip height in metres; row of the cobble tops
+const BUCA={a:110,b:450,top:5};                  // crater opening and cobble-top row of the pothole piece (its sides fade into the street)
+const FIONDA={w:342,h:531,base:174,tips:[[60,28],[288,28]],m:2.85}; // trunk centre at the bottom, where the bands tie on, height in metres
 // background strips, far to near: each tiles along the street (cut where its edges match, so the seam hides),
 // scrolls at its own depth and can get a warm haze baked in once (0 = colours as approved)
 function strip(src,h,depth,haze){const S={h,depth,cv:null},im=new Image();
@@ -515,51 +524,79 @@ function drawSky(){
 function drawGround(){
   worldTransform();
   const left=cam.x-viewW()/2-2,right=cam.x+viewW()/2+2,bottom=-12;
-  // sanpietrini road
-  ctx.fillStyle='#6b5f55';ctx.fillRect(left,bottom,right-left,-bottom);
-  ctx.fillStyle='#3e3631';ctx.fillRect(left,-.45,right-left,.45);
-  ctx.fillStyle='#4d433c';for(let x=Math.floor(left/.3)*.3;x<right;x+=.3){ctx.fillRect(x+.02,-.4,.26,.17);ctx.fillRect(x+.17,-.2,.26,.17);}
-  ctx.fillStyle='#a69a88';ctx.fillRect(left,-.06,right-left,.06);
-  // pits
+  // packed soil under the street
+  const g=ctx.createLinearGradient(0,-.8,0,-6);g.addColorStop(0,'#5e3727');g.addColorStop(1,'#2a170e');ctx.fillStyle=g;ctx.fillRect(left,bottom,right-left,-.8-bottom);
+  // sanpietrini strip, tiled; left open over each pit, so the crater of the pothole piece shows what is behind
+  const st=OBJ.strada;
+  if(ok(st)){
+    const k=STRADA.h/st.naturalHeight,tw=st.naturalWidth*k;
+    ctx.save();ctx.beginPath();ctx.rect(left,-2,right-left,3);for(const [a,b] of L.pits)ctx.rect(a,-2,b-a,3);ctx.clip('evenodd');
+    ctx.scale(1,-1);for(let x=Math.floor(left/tw)*tw;x<right;x+=tw)ctx.drawImage(st,x,-STRADA.top*k,tw+.01,STRADA.h);
+    ctx.restore();
+  }else{ctx.fillStyle='#4d433c';ctx.fillRect(left,-.8,right-left,.8);}
+  // the far wall of each pothole, seen through its crater
+  for(const [a,b] of L.pits){const w=ctx.createLinearGradient(0,.05,0,-.7);w.addColorStop(0,'#3b2417');w.addColorStop(1,'#140b06');ctx.fillStyle=w;ctx.fillRect(a,-.7,b-a,.75);}
+}
+// the pothole piece maps its crater opening onto the physics pit [a,b]
+function bucaRect(a,b){const k=(b-a)/(BUCA.b-BUCA.a);return {x:a-BUCA.a*k,w:OBJ.buca.naturalWidth*k,k};}
+// drawn after the bodies: whatever drops into the crater disappears behind its soil
+function drawPits(){
   for(const [a,b] of L.pits){
-    const g=ctx.createLinearGradient(0,0,0,-3);g.addColorStop(0,'#2a211c');g.addColorStop(1,'#0c0907');ctx.fillStyle=g;
-    ctx.beginPath();ctx.moveTo(a,0);ctx.lineTo(a+.15,-3);ctx.lineTo(b-.15,-3);ctx.lineTo(b,0);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#5c5047';ctx.fillRect(a-.25,-.12,.25,.12);ctx.fillRect(b,-.12,.25,.12);
+    if(ok(OBJ.buca)){const r=bucaRect(a,b);ctx.save();ctx.scale(1,-1);ctx.drawImage(OBJ.buca,r.x,-BUCA.top*r.k,r.w,OBJ.buca.naturalHeight*r.k);ctx.restore();}
+    else{ctx.fillStyle='#120d0a';ctx.beginPath();ctx.moveTo(a,0);ctx.lineTo(a+.15,-3);ctx.lineTo(b-.15,-3);ctx.lineTo(b,0);ctx.closePath();ctx.fill();}
     // cone and tape
     drawCone(a-.55,0);
     ctx.strokeStyle='#e8261c';ctx.lineWidth=.06;ctx.setLineDash([.2,.2]);ctx.beginPath();ctx.moveTo(a-.55,.6);ctx.lineTo(b+.4,.55);ctx.stroke();ctx.setLineDash([]);
     ctx.fillStyle='#ddd';ctx.fillRect(b+.35,0,.06,.65);
   }
 }
-function drawCone(x,y){ctx.fillStyle='#ff6a1c';ctx.beginPath();ctx.moveTo(x-.22,y);ctx.lineTo(x-.05,y+.62);ctx.lineTo(x+.05,y+.62);ctx.lineTo(x+.22,y);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(x-.13,y+.25,.26,.1);ctx.fillStyle='#222';ctx.fillRect(x-.28,y,.56,.06);}
+function drawCone(x,y){const im=OBJ.cono,h=.72;
+  if(ok(im)){const w=h*im.naturalWidth/im.naturalHeight;ctx.save();ctx.scale(1,-1);ctx.drawImage(im,x-w/2,-y-h,w,h);ctx.restore();return;}
+  ctx.fillStyle='#ff6a1c';ctx.beginPath();ctx.moveTo(x-.22,y);ctx.lineTo(x-.05,y+.62);ctx.lineTo(x+.05,y+.62);ctx.lineTo(x+.22,y);ctx.fill();}
+// where a band ties onto the fork (0 = front prong, 1 = back prong)
+function slingTip(i){const k=FIONDA.m/FIONDA.h,[tx,ty]=FIONDA.tips[i];return [SLING.x+(tx-FIONDA.base)*k,(FIONDA.h-ty)*k];}
 function drawSling(back){
-  const x=SLING.x;
+  const pp=pouch();
   if(back){
-    ctx.fillStyle='#7a4f27';ctx.strokeStyle='#4e3118';ctx.lineWidth=.05;
-    // trunk + forks
-    ctx.beginPath();ctx.moveTo(x-.13,0);ctx.lineTo(x-.1,1.7);ctx.lineTo(x-.42,2.75);ctx.lineTo(x-.24,2.8);ctx.lineTo(x,1.95);ctx.lineTo(x+.22,2.8);ctx.lineTo(x+.4,2.75);ctx.lineTo(x+.11,1.7);ctx.lineTo(x+.14,0);ctx.closePath();ctx.fill();ctx.stroke();
-    ctx.fillStyle='#ffc21a';ctx.fillRect(x-.17,.8,.34,.18);
-    // back band
-    const pp=pouch();ctx.strokeStyle='#5a1d14';ctx.lineWidth=.12;ctx.beginPath();ctx.moveTo(x+.3,2.72);ctx.lineTo(pp[0],pp[1]);ctx.stroke();
+    const im=OBJ.fionda,k=FIONDA.m/FIONDA.h;
+    if(ok(im)){ctx.save();ctx.scale(1,-1);ctx.drawImage(im,SLING.x-FIONDA.base*k,-FIONDA.m,FIONDA.w*k,FIONDA.m);ctx.restore();}
+    else{ctx.fillStyle='#7a4f27';ctx.fillRect(SLING.x-.13,0,.26,2.7);}
+    // back band and the leather pouch sit behind the character; only the front band crosses in front
+    const t=slingTip(1);ctx.strokeStyle='#5a1d14';ctx.lineWidth=.12;ctx.beginPath();ctx.moveTo(t[0],t[1]);ctx.lineTo(pp[0],pp[1]);ctx.stroke();
+    ctx.fillStyle='#3a2a20';ctx.beginPath();ctx.arc(pp[0],pp[1],.2,0,7);ctx.fill();
   }else{
-    const pp=pouch();ctx.strokeStyle='#7a2a1e';ctx.lineWidth=.13;ctx.beginPath();ctx.moveTo(x-.33,2.72);ctx.lineTo(pp[0],pp[1]);ctx.stroke();
-    ctx.fillStyle='#3a2a20';ctx.beginPath();ctx.arc(pp[0],pp[1],.16,0,7);ctx.fill();
+    const t=slingTip(0);ctx.strokeStyle='#7a2a1e';ctx.lineWidth=.13;ctx.beginPath();ctx.moveTo(t[0],t[1]);ctx.lineTo(pp[0],pp[1]);ctx.stroke();
   }
 }
 function pouch(){if(state==='ready'&&aiming)return[SLING.x+pull.x,SLING.y+pull.y];if(state==='ready')return[SLING.x,SLING.y];return[SLING.x,SLING.y];}
 function crack(w,h,seed,n){ctx.strokeStyle='rgba(40,25,15,.55)';ctx.lineWidth=.035;let s=seed*1000;const r=()=>{s=(s*9301+49297)%233280;return s/233280;};
   for(let k=0;k<n;k++){ctx.beginPath();let x=(r()-.5)*w,y=(r()-.5)*h;ctx.moveTo(x,y);for(let i=0;i<4;i++){x+=(r()-.5)*w*.6;y+=(r()-.5)*h*.6;ctx.lineTo(clamp(x,-w/2,w/2),clamp(y,-h/2,h/2));}ctx.stroke();}}
+// one axis of a sliced draw: source start/length and destination start/length for the two borders and the middle
+function sliceAxis(S,D,k,bs){const bd=Math.min(bs*k,D/2),md=D-2*bd,need=md/k,avail=S-2*bs,fits=need<=avail;
+  return [[0,bs,-D/2,bd],[fits?(S-need)/2:bs,fits?need:avail,-D/2+bd,md],[S-bs,bs,D/2-bd,bd]];}
+// draws im over a w×h box centred on the origin (y down): borders keep the image's proportions,
+// the middle is taken from the centre of the image when it is long enough, stretched otherwise
+function slice(im,w,h,b){
+  const iw=im.naturalWidth,ih=im.naturalHeight,k=Math.min(w,h)/Math.min(iw,ih),bs=b*Math.min(iw,ih);
+  const X=sliceAxis(iw,w,k,bs),Y=sliceAxis(ih,h,k,bs);
+  for(const [sx,sw,dx,dw] of X)for(const [sy,sh,dy,dh] of Y)if(sw>0&&sh>0&&dw>0&&dh>0)ctx.drawImage(im,sx,sy,sw,sh,dx,dy,dw+.004,dh+.004);
+}
 function drawBlock(b,u){
   const M=MATS[u.mat],p=b.getPosition();
-  ctx.save();ctx.translate(p.x,p.y);ctx.rotate(b.getAngle());
-  const w=u.w,h=u.h;
-  ctx.fillStyle=M.fill;ctx.fillRect(-w/2,-h/2,w,h);
-  if(u.mat==='wood'){ctx.strokeStyle='rgba(122,79,39,.45)';ctx.lineWidth=.03;const along=w>h;for(let i=1;i<3;i++){ctx.beginPath();if(along){ctx.moveTo(-w/2,-h/2+h*i/3);ctx.lineTo(w/2,-h/2+h*i/3);}else{ctx.moveTo(-w/2+w*i/3,-h/2);ctx.lineTo(-w/2+w*i/3,h/2);}ctx.stroke();}}
-  if(u.mat==='glass'){ctx.fillStyle='rgba(255,255,255,.55)';ctx.fillRect(-w/2+w*.15,-h/2+h*.1,Math.max(.04,w*.12),h*.8);}
-  if(u.mat==='stone'){ctx.fillStyle='rgba(140,120,85,.35)';let s=u.seed*999;for(let i=0;i<w*h*14;i++){s=(s*9301+49297)%233280;const a=s/233280;s=(s*9301+49297)%233280;const c=s/233280;ctx.fillRect(-w/2+a*w,-h/2+c*h,.06,.04);}}
-  if(u.mat==='metal'){ctx.fillStyle='#6d777d';for(const sx of [-1,1])for(const sy of [-1,1])ctx.beginPath(),ctx.arc(sx*(w/2-.12),sy*(h/2-.12),.05,0,7),ctx.fill();}
-  if(u.bin){ctx.fillStyle='#2f5f39';ctx.fillRect(-w/2-.05,h/2-.18,w+.1,.18);ctx.fillStyle='#ff6a1c';ctx.beginPath();ctx.moveTo(-.18,-.2);ctx.quadraticCurveTo(-.22,.12,0,.3);ctx.quadraticCurveTo(.22,.12,.18,-.2);ctx.fill();ctx.fillStyle='#ffd23a';ctx.beginPath();ctx.moveTo(-.08,-.2);ctx.quadraticCurveTo(-.1,0,0,.12);ctx.quadraticCurveTo(.1,0,.08,-.2);ctx.fill();}
-  ctx.strokeStyle=M.edge;ctx.lineWidth=.05;ctx.strokeRect(-w/2,-h/2,w,h);
+  ctx.save();ctx.translate(p.x,p.y);ctx.rotate(b.getAngle());ctx.scale(1,-1);
+  let w=u.w,h=u.h;
+  if(u.bin){
+    if(ok(OBJ.cassonetto))ctx.drawImage(OBJ.cassonetto,-w/2,-h/2,w,h);else{ctx.fillStyle=M.fill;ctx.fillRect(-w/2,-h/2,w,h);}
+    // the flame sticker: this one goes off
+    ctx.translate(0,h*.12);ctx.fillStyle='#ff6a1c';ctx.beginPath();ctx.moveTo(-.18,.2);ctx.quadraticCurveTo(-.22,-.12,0,-.3);ctx.quadraticCurveTo(.22,-.12,.18,.2);ctx.fill();
+    ctx.fillStyle='#ffd23a';ctx.beginPath();ctx.moveTo(-.08,.2);ctx.quadraticCurveTo(-.1,0,0,-.12);ctx.quadraticCurveTo(.1,0,.08,.2);ctx.fill();ctx.translate(0,-h*.12);
+  }else{
+    // long pieces use the beam (turned upright for posts), squat ones the square block
+    const T=TEX[M.tex],long=Math.max(w,h)>=2.5*Math.min(w,h),im=long?T.trave:T.blocco;
+    if(ok(im)){if(long&&h>w){ctx.rotate(Math.PI/2);[w,h]=[h,w];}
+      if(u.mat==='glass')ctx.globalAlpha=.85;slice(im,w,h,.3);ctx.globalAlpha=1;}
+    else{ctx.fillStyle=M.fill;ctx.fillRect(-w/2,-h/2,w,h);ctx.strokeStyle=M.edge;ctx.lineWidth=.05;ctx.strokeRect(-w/2,-h/2,w,h);}
+  }
   const f=u.hp/u.max;if(f<.66)crack(w,h,u.seed,f<.33?3:1);
   ctx.restore();
 }
@@ -609,6 +646,7 @@ function draw(t){
   ctx.fillStyle='rgba(255,255,255,.9)';for(const [x,y] of trail){ctx.beginPath();ctx.arc(x,y,.08,0,7);ctx.fill();}
   for(const b of bodies){const u=ud(b);if(u.kind==='block')drawBlock(b,u);}
   for(const b of bodies){const u=ud(b);if(u.kind==='foe')drawFoe(b,u,t);else if(u.kind==='bird'){const p=b.getPosition();drawBird(u.type,p.x,p.y,b.getAngle(),u.r);}}
+  drawPits();
   // the waiting queue stands on the cobbles behind the sling
   queue.forEach((ty,i)=>{const r=BIRDS[ty].r;drawBird(ty,SLING.x-1.2-i*1.15,r+Math.abs(Math.sin(t*3+i))*.12,0,r);});
   if(state==='ready'||state==='intro'){if(birdType&&state==='ready'){const pp=pouch();drawBird(birdType,pp[0],pp[1],0,BIRDS[birdType].r);}}
