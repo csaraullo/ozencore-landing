@@ -490,6 +490,11 @@ const toW=(sx,sy)=>[(sx-cw/2)/cam.s+cam.x,(groundY-sy)/cam.s+cam.y];
 function worldTransform(){const sx=reduceMotion?0:(Math.random()-.5)*shake*14,sy=reduceMotion?0:(Math.random()-.5)*shake*14;
   ctx.setTransform(cam.s*dpr,0,0,-cam.s*dpr,(cw/2-cam.x*cam.s+sx)*dpr,(groundY+cam.y*cam.s+sy)*dpr);}
 function screenTransform(){ctx.setTransform(dpr,0,0,dpr,0,0);}
+// houses get a warm haze baked in once, so the fort and the characters read in front of them
+const CASE={img:new Image(),h:12,haze:.3,cv:null};
+CASE.img.onload=()=>{const im=CASE.img,c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const g=c.getContext('2d');
+  g.drawImage(im,0,0);g.globalCompositeOperation='source-atop';g.fillStyle=`rgba(247,226,196,${CASE.haze})`;g.fillRect(0,0,c.width,c.height);CASE.cv=c;};
+CASE.img.src='assets/sfondi/trastevere-case.webp';
 const skyGrad=()=>{const g=ctx.createLinearGradient(0,0,0,ch);g.addColorStop(0,'#3f97e0');g.addColorStop(.55,'#9fd0f0');g.addColorStop(.85,'#f7dfba');g.addColorStop(1,'#f2cf9e');return g;};
 function drawSky(){
   screenTransform();ctx.fillStyle=skyGrad();ctx.fillRect(0,0,cw,ch);
@@ -508,11 +513,11 @@ function drawSky(){
   // umbrella pines and cypresses
   ctx.fillStyle='rgba(110,130,90,.55)';
   for(const [x,h] of [[8,7],[14,8.5],[44,7.5],[52,8],[60,7]]){const px=P(x,.35);ctx.fillRect(px-.18*unit,base-h*unit,.36*unit,h*unit);ctx.beginPath();ctx.ellipse(px,base-h*unit,3*unit,1.1*unit,0,0,7);ctx.fill();}
-  // near rooftops band
-  const Q=(x)=>(x-cam.x*.6)*cam.s*.8+cw/2;const u2=cam.s*.8;
-  const cols=['rgba(222,150,90,.7)','rgba(232,190,110,.7)','rgba(205,110,70,.7)'];
-  for(let i=-6;i<16;i++){const x=Q(i*5.5);ctx.fillStyle=cols[(i+60)%3];const h=(4+((i*7+60)%5))*u2;ctx.fillRect(x,base-h,5.3*u2,h);
-    ctx.fillStyle='rgba(60,90,60,.35)';for(let k=0;k<2;k++)for(let j=0;j<Math.floor(h/u2/1.8)-1;j++)ctx.fillRect(x+(1+k*2.4)*u2,base-h+(1+j*1.8)*u2,.9*u2,1.1*u2);}
+  // near layer: the row of Trastevere houses, tiled along the street (strip cut between two drainpipes so the seam hides)
+  const im=CASE.cv;if(!im)return;
+  const hh=CASE.h*cam.s*.8,tw=hh*im.width/im.height;
+  let x0=(-cam.x*.6)*cam.s*.8+cw/2;x0-=Math.ceil(x0/tw)*tw;
+  for(let x=x0;x<cw;x+=tw)ctx.drawImage(im,x,base-hh,tw+.5,hh);
 }
 function drawGround(){
   worldTransform();
