@@ -13,7 +13,7 @@ Gioco alla Angry Birds ambientato a Roma, in 2D. I romani tirati con la fionda c
 - `fionda/assets/sfondi/`: sfondo di Trastevere a due strati, generati con FLUX su cielo magenta e resi trasparenti; ognuno è tagliato dove i bordi combaciano, così si ripete senza giunture.
   - `trastevere-case.webp`: fila di case, strato vicino (tagliata tra due grondaie).
   - `trastevere-fondale.webp`: cupola di San Pietro, campanile di Santa Maria in Trastevere, pini e cipressi, strato lontano. Scelta la versione più chiara e sfumata tra due prove.
-  - Nel gioco: lista `STRIPS`, per ogni strato `strip(file, altezza, profondità, velo)`. La profondità è quanto scorre con la telecamera, il velo è la foschia chiara che fa risaltare fortino e personaggi. Il cielo azzurro e il sole restano disegnati via codice.
+  - Nel gioco: lista `STRIPS`, per ogni strato `strip(file, altezza, profondità, velo)`. La profondità è quanto scorre con la telecamera, il velo è una foschia chiara opzionale. Oggi è a 0 su entrambi: Cristian vuole le case a colori pieni (col velo sembrava tutto sbiadito); il fondale è già chiaro di suo. La leggibilità del fortino va ottenuta con la grafica dei materiali, non schiarendo lo sfondo. Il cielo azzurro e il sole restano disegnati via codice.
 - Lezione imparata: un'immagine "scena completa" in prospettiva non serve come sfondo. Servono strati separati, visti di fronte, senza personaggi né oggetti, ripetibili in orizzontale.
 - `daje/index.html`: il primo esperimento, infinite runner 3D (three.js in `daje/lib/`). Da tenere come possibile minigioco bonus.
 - Il ramo `daje-de-fionda` contiene entrambi. Non è ancora su `main`: il sito pubblico non è cambiato.

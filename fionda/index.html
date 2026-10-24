@@ -491,14 +491,14 @@ function worldTransform(){const sx=reduceMotion?0:(Math.random()-.5)*shake*14,sy
   ctx.setTransform(cam.s*dpr,0,0,-cam.s*dpr,(cw/2-cam.x*cam.s+sx)*dpr,(groundY+cam.y*cam.s+sy)*dpr);}
 function screenTransform(){ctx.setTransform(dpr,0,0,dpr,0,0);}
 // background strips, far to near: each tiles along the street (cut where its edges match, so the seam hides),
-// scrolls at its own depth and gets a warm haze baked in once, so the fort and the characters read in front
+// scrolls at its own depth and can get a warm haze baked in once (0 = colours as approved)
 function strip(src,h,depth,haze){const S={h,depth,cv:null},im=new Image();
   im.onload=()=>{const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const g=c.getContext('2d');
     g.drawImage(im,0,0);g.globalCompositeOperation='source-atop';g.fillStyle=`rgba(247,226,196,${haze})`;g.fillRect(0,0,c.width,c.height);S.cv=c;};
   im.src=src;return S;}
 const STRIPS=[
-  strip('assets/sfondi/trastevere-fondale.webp',22,.2,.12), // San Pietro, Santa Maria in Trastevere, pines: about one tile per screen
-  strip('assets/sfondi/trastevere-case.webp',12,.6,.3),     // the row of houses
+  strip('assets/sfondi/trastevere-fondale.webp',22,.2,0), // San Pietro, Santa Maria in Trastevere, pines: about one tile per screen; already pale
+  strip('assets/sfondi/trastevere-case.webp',12,.6,0),    // the row of houses, full colour
 ];
 const skyGrad=()=>{const g=ctx.createLinearGradient(0,0,0,ch);g.addColorStop(0,'#3f97e0');g.addColorStop(.55,'#9fd0f0');g.addColorStop(.85,'#f7dfba');g.addColorStop(1,'#f2cf9e');return g;};
 function drawSky(){
