@@ -292,13 +292,15 @@ const builder={
 // ---------- game state ----------
 let state='menu', score=0, foesLeft=0, queue=[], bird=null, crew=[], flash=0, birdType=null, powerUsed=false, flyT=0, settleT=0, crowBody=null, crowCaught=false, crowEscaped=false,
     winTimer=-1, introT=0, aiming=false, pull={x:0,y:0}, trail=[], lastTrail=[], trailT=0, particles=[], floats=[], rings=[], camDragging=null, manualCamT=0;
-const cam={x:0,y:0,s:30};
+// s = pixels per metre: base (fits the level to the screen) times zoom (the launch push-in)
+const cam={x:0,y:0,s:30,base:30,zoom:1};
+let zoomT=-1;
 let stars=JSON.parse(store.get('fionda-stars')||'{}'), bests=JSON.parse(store.get('fionda-best')||'{}');
 
 function loadLevel(i){
   levelIdx=i;L=LEVELS[i];
   bodies=[];hitQ=[];killQ=[];particles=[];floats=[];rings=[];trail=[];lastTrail=[];
-  foesLeft=0;crowBody=null;crowCaught=false;crowEscaped=false;score=0;winTimer=-1;bird=null;crew=[];flash=0;birdType=null;aiming=false;
+  foesLeft=0;crowBody=null;crowCaught=false;crowEscaped=false;score=0;winTimer=-1;bird=null;crew=[];flash=0;birdType=null;aiming=false;zoomT=-1;cam.zoom=1;
   makeWorld();groundChain();L.build(builder);
   simT=0;graceUntil=1.4;
   queue=L.birds.slice();
@@ -326,7 +328,7 @@ function makeBird(type,x,y,vx,vy,spin){
   b.setUserData({kind:'bird',type,r:B.r});bodies.push(b);return b;
 }
 function launch(vx,vy){
-  bird=makeBird(birdType,SLING.x+pull.x,SLING.y+pull.y,vx,vy,-vx*.6);crew=[];
+  bird=makeBird(birdType,SLING.x+pull.x,SLING.y+pull.y,vx,vy,-vx*.6);crew=[];if(!reduceMotion)zoomT=0;
   state='flying';flyT=0;settleT=0;trail=[];trailT=0;manualCamT=0;
   sfx.launch();
   if(crowBody&&ud(crowBody).state==='perched')ud(crowBody).nervous=true;
@@ -520,15 +522,22 @@ function layout(){
   canvas.width=cw*dpr|0;canvas.height=ch*dpr|0;
   const portrait=ch>cw;
   const w=L?L.w+4:36;
-  cam.s=portrait?cw/17:Math.min(cw/w,ch/13.5);
-  cam.s=Math.max(cam.s,cw/(w+10));
+  cam.base=portrait?cw/17:Math.min(cw/w,ch/13.5);
+  cam.base=Math.max(cam.base,cw/(w+10));
+  cam.s=cam.base*cam.zoom;
   groundY=ch-Math.max(34,ch*(portrait?.2:.13));
   $('#rotate').hidden=!(portrait&&state!=='menu'&&!$('#hud').hidden);
 }
 function viewW(){return cw/cam.s;}
 function camMin(){return -1.5+viewW()/2;}
 function camMax(){return Math.max(camMin(),(L?L.w:32)+2-viewW()/2);}
+// launch push-in: quick zoom in as the shot leaves the sling, a short hold, then a slow ease back out
+const ZOOM_IN=.15;
+function zoomCurve(t){const e=x=>x*x*(3-2*x);
+  if(t<.35)return 1+ZOOM_IN*e(t/.35);if(t<.7)return 1+ZOOM_IN;return 1+ZOOM_IN*(1-e(Math.min(1,(t-.7)/1.1)));}
 function updateCam(dt){
+  if(zoomT>=0){zoomT+=dt;cam.zoom=zoomCurve(zoomT);if(zoomT>1.8){zoomT=-1;cam.zoom=1;}}
+  cam.s=cam.base*cam.zoom;
   let tx=camMin(),ty=0;
   if(state==='intro'){introT+=dt;const k=clamp((introT-.6)/1.6,0,1);tx=lerp(camMax(),camMin(),k*k*(3-2*k));if(introT>2.4){loadNextBird();}}
   else if(bird&&(state==='flying'||state==='settle')){const p=bird.getPosition();tx=p.x+viewW()*.15;const topVis=(groundY/cam.s);ty=Math.max(0,p.y-topVis*.75);}
@@ -569,9 +578,10 @@ function drawSky(){
   screenTransform();ctx.fillStyle=skyGrad();ctx.fillRect(0,0,cw,ch);
   // sun
   ctx.fillStyle='rgba(255,244,214,.9)';ctx.beginPath();ctx.arc(cw*.82,ch*.2,Math.min(cw,ch)*.07,0,7);ctx.fill();
-  const base=groundY+cam.y*cam.s*.3,u=cam.s*.8;
+  const base=groundY+cam.y*cam.s*.3;
   for(const S of STRIPS){if(!S.cv)continue;
-    const hh=S.h*u,tw=hh*S.cv.width/S.cv.height;
+    // farther strips feel less of the launch zoom
+    const u=cam.base*(1+(cam.zoom-1)*S.depth)*.8,hh=S.h*u,tw=hh*S.cv.width/S.cv.height;
     // a tile sits centred on screen while the camera is at the sling
     let x=-(cam.x-camMin())*S.depth*u+(cw-tw)/2;x-=Math.ceil(x/tw)*tw;
     for(;x<cw;x+=tw)ctx.drawImage(S.cv,x,base-hh,tw+.5,hh);}
