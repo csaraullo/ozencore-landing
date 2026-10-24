@@ -752,7 +752,7 @@ canvas.addEventListener('pointerup',release);canvas.addEventListener('pointercan
 
 // ---------- audio ----------
 const sfx={ctx:null,muted:store.get('fionda-mute')==='1',
-  init(){if(!this.ctx){try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume();},
+  init(){if(!this.ctx){try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume();music.start();},
   tone(f,dur,type,vol,f2,delay){const c=this.ctx;if(!c||this.muted)return;const t=c.currentTime+(delay||0),o=c.createOscillator(),g=c.createGain();o.type=type||'square';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(vol||.1,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+.02);},
   noise(dur,vol,freq,q){const c=this.ctx;if(!c||this.muted)return;const n=c.sampleRate*dur|0,b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2);const s=c.createBufferSource();s.buffer=b;const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=q||1;const g=c.createGain();g.gain.value=vol;s.connect(f);f.connect(g);g.connect(c.destination);s.start();},
   stretch(){this.tone(180,.25,'sawtooth',.03,260);},
@@ -771,10 +771,22 @@ const sfx={ctx:null,muted:store.get('fionda-mute')==='1',
   win(){[523,659,784,1047].forEach((f,i)=>this.tone(f,.22,'square',.05,null,i*.12));},
   lose(){[392,330,262].forEach((f,i)=>this.tone(f,.3,'triangle',.08,null,i*.18));},
 };
+// background music (Cristian's track, made with ozencore): decoded once and looped gapless through Web Audio,
+// skipping the encoder's silent padding at both ends; kept under the sound effects
+const music={buf:null,src:null,gain:null,loading:false,vol:.35,
+  start(){const c=sfx.ctx;if(!c||this.src)return;
+    if(!this.buf){if(!this.loading){this.loading=true;fetch('assets/audio/musica.mp3').then(r=>r.arrayBuffer()).then(d=>c.decodeAudioData(d)).then(b=>{this.buf=b;this.start();}).catch(()=>{this.loading=false;});}return;}
+    const d=this.buf.getChannelData(0),sr=this.buf.sampleRate;let a=0,z=d.length-1;while(a<z&&Math.abs(d[a])<1e-4)a++;while(z>a&&Math.abs(d[z])<1e-4)z--;
+    this.gain=c.createGain();this.gain.gain.value=sfx.muted?0:this.vol;this.gain.connect(c.destination);
+    const s=c.createBufferSource();s.buffer=this.buf;s.loop=true;s.loopStart=a/sr;s.loopEnd=(z+1)/sr;s.connect(this.gain);s.start(0,a/sr);this.src=s;},
+  mute(m){if(this.gain)this.gain.gain.setTargetAtTime(m?0:this.vol,sfx.ctx.currentTime,.05);},
+};
 const muteBtn=$('#muteBtn');
 function renderMute(){muteBtn.innerHTML=sfx.muted?'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>':'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';}
 renderMute();
-muteBtn.addEventListener('click',()=>{sfx.muted=!sfx.muted;store.set('fionda-mute',sfx.muted?'1':'0');renderMute();});
+muteBtn.addEventListener('click',()=>{sfx.muted=!sfx.muted;store.set('fionda-mute',sfx.muted?'1':'0');renderMute();music.mute(sfx.muted);});
+// no music from a tab in the background
+document.addEventListener('visibilitychange',()=>{const c=sfx.ctx;if(c)document.hidden?c.suspend():c.resume();});
 
 // ---------- UI ----------
 const toastBox=$('#toasts');
