@@ -7,6 +7,7 @@ Gioco alla Angry Birds ambientato a Roma, in 2D. I romani tirati con la fionda c
   - Fionda con traiettoria, materiali legno, vetro, travertino, metallo, cassonetto che esplode.
   - Ciclista (tocco in volo: scatto), nonna (tocco in volo: bustata).
   - Maranza (tocco in volo: si divide in 3, ventaglio sopra e sotto), tassista (clacson: onda a cono in avanti che spinge i blocchi, spacca il vetro e abbatte chi vola), turista (selfie col flash: lampo bianco, i gabbiani vicini saltano giù, pappagalli e corvo abbagliati cadono con le stelline e muoiono al primo urto). I romani non si scontrano tra loro (filtro di gruppo), così i tre maranza partono sovrapposti.
+  - Camera: al lancio zoom in leggero (+15% in 0,35 s), breve pausa, poi torna normale in circa 1 s (`zoomCurve`, `ZOOM_IN`). Gli strati dello sfondo si ingrandiscono meno quanto più sono lontani. Disattivato con "riduci movimento" del sistema.
   - Code dei livelli: 1 ciclista, maranza, nonna; 2 tassista, ciclista, nonna; 3 turista, maranza, tassista, ciclista. Bilanciamento da rivedere giocando (il clacson è forte).
   - Gabbiani normali e grassi da eliminare, corvo ladro col supplì d'oro (scappa in volo, se non lo prendi niente terzo supplì), pappagalli verdi velocissimi, buche che inghiottono tutto.
   - 3 livelli a Trastevere, valutazione da 1 a 3 supplì, record in localStorage.
