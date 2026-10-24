@@ -94,6 +94,16 @@ body{margin:0;overflow:hidden;background:var(--notte);color:var(--crema);font-fa
 .result-note{margin:6px 0 0;font-size:.9rem;color:#5b4c41;font-style:italic;min-height:1.2em;text-wrap:balance;}
 .best{margin:10px 0 0;font:700 .7rem var(--display);letter-spacing:.18em;text-transform:uppercase;color:#6d5e52;min-height:1em;}
 @media (prefers-reduced-motion: reduce){.toast{animation:none}}
+/* phones held sideways: a wider, shorter plaque so the cast and the button fit */
+@media (max-height:520px) and (min-width:640px){
+  .plaque{max-width:780px;padding:14px 20px 16px;}
+  .plaque h1{font-size:2rem;}
+  .rule{margin:8px auto;}
+  .lede{font-size:.84rem;}
+  .cast{grid-template-columns:repeat(4,1fr);gap:6px 10px;font-size:.76rem;margin-top:10px;}
+  .cast img{width:34px;height:34px;}
+  .cta{margin-top:10px;padding:10px 28px;}
+}
 </style>
 </head>
 <body>
@@ -120,6 +130,10 @@ body{margin:0;overflow:hidden;background:var(--notte);color:var(--crema);font-fa
     <div class="cast">
       <div><img src="assets/sprites/ciclista.webp" alt=""><span><b>Ciclista</b><span>Tocca in volo: scatto</span></span></div>
       <div><img src="assets/sprites/nonna.webp" alt=""><span><b>Nonna</b><span>Tocca in volo: bustata</span></span></div>
+      <div><img src="assets/sprites/maranza.webp" alt=""><span><b>Maranza</b><span>Tocca in volo: si divide in tre</span></span></div>
+      <div><img src="assets/sprites/tassista.webp" alt=""><span><b>Tassista</b><span>Tocca in volo: clacson che spazza via</span></span></div>
+      <div><img src="assets/sprites/turista.webp" alt=""><span><b>Turista</b><span>Tocca in volo: flash che abbaglia</span></span></div>
+      <div><img src="assets/sprites/gabbiano.webp" alt=""><span><b>Gabbiani</b><span>Hanno rubato la spesa: buttali giù</span></span></div>
       <div><img src="assets/sprites/corvo.webp" alt=""><span><b>Corvo ladro</b><span>Prendilo prima che scappi col supplì d'oro</span></span></div>
       <div><img src="assets/sprites/pappagallo.webp" alt=""><span><b>Pappagalli verdi</b><span>Velocissimi, colpiscili al volo</span></span></div>
     </div>
@@ -176,6 +190,9 @@ const MAX_PULL=2.2, K_LAUNCH=10.2, GRAV=-10;
 const BIRDS={
   ciclista:{r:.42,density:2.2,label:'Ciclista',hint:'Tocca in volo: scatto!'},
   nonna:{r:.55,density:4.5,label:'Nonna',hint:'Tocca in volo: bustata!'},
+  maranza:{r:.38,density:1.8,label:'Maranza',hint:'Tocca in volo: si divide in tre!'},
+  tassista:{r:.52,density:3.2,label:'Tassista',hint:'Tocca in volo: clacson!'},
+  turista:{r:.48,density:2.4,label:'Turista',hint:'Tocca in volo: selfie col flash!'},
 };
 // hp is in joules of impact energy (0.5 * reduced mass * v^2)
 const MATS={
@@ -195,7 +212,7 @@ const FOES={
 // ---------- levels ----------
 // builder coordinates: x = centre, y0 = bottom edge, metres
 const LEVELS=[
-  {name:'Trastevere',sub:'Il primo fortino',w:32,birds:['ciclista','ciclista','nonna'],target:[24000,36000],pits:[[17,18.8]],
+  {name:'Trastevere',sub:'Il primo fortino',w:32,birds:['ciclista','maranza','nonna'],target:[24000,36000],pits:[[17,18.8]],
    build(b){
      b.post('wood',23,0,2.2);b.post('wood',26,0,2.2);b.beam('wood',24.5,2.2,3.6);
      b.gull(24.5,0);
@@ -203,7 +220,7 @@ const LEVELS=[
      b.gull(24.5,3.84);
      b.post('wood',28.6,0,1.6);b.post('wood',30.4,0,1.6);b.beam('glass',29.5,1.6,2.4);b.gull(29.5,1.92);
    }},
-  {name:'Trastevere',sub:'Il cantiere infinito',w:36,birds:['ciclista','nonna','ciclista'],target:[38000,56000],pits:[[20,22.2]],
+  {name:'Trastevere',sub:'Il cantiere infinito',w:36,birds:['tassista','ciclista','nonna'],target:[38000,56000],pits:[[20,22.2]],
    build(b){
      b.bin(23.4,0);
      b.post('wood',25,0,2.6);b.post('wood',28,0,2.6);b.post('wood',31,0,2.6);
@@ -216,7 +233,7 @@ const LEVELS=[
      b.block('stone',28,5.24,1,1);
      b.crow(28,6.24);
    }},
-  {name:'Trastevere',sub:'Pappagalli in piazza',w:38,birds:['ciclista','ciclista','nonna','ciclista'],target:[42000,60000],pits:[[15,17],[31.5,33.5]],
+  {name:'Trastevere',sub:'Pappagalli in piazza',w:38,birds:['turista','maranza','tassista','ciclista'],target:[42000,60000],pits:[[15,17],[31.5,33.5]],
    build(b){
      b.block('stone',22,0,1,1.6);b.block('stone',25,0,1,1.6);b.beam('wood',23.5,1.6,3.6);
      b.gull(23.5,0);
@@ -271,7 +288,7 @@ const builder={
 };
 
 // ---------- game state ----------
-let state='menu', score=0, foesLeft=0, queue=[], bird=null, birdType=null, powerUsed=false, flyT=0, settleT=0, crowBody=null, crowCaught=false, crowEscaped=false,
+let state='menu', score=0, foesLeft=0, queue=[], bird=null, crew=[], flash=0, birdType=null, powerUsed=false, flyT=0, settleT=0, crowBody=null, crowCaught=false, crowEscaped=false,
     winTimer=-1, introT=0, aiming=false, pull={x:0,y:0}, trail=[], lastTrail=[], trailT=0, particles=[], floats=[], rings=[], camDragging=null, manualCamT=0;
 const cam={x:0,y:0,s:30};
 let stars=JSON.parse(store.get('fionda-stars')||'{}'), bests=JSON.parse(store.get('fionda-best')||'{}');
@@ -279,7 +296,7 @@ let stars=JSON.parse(store.get('fionda-stars')||'{}'), bests=JSON.parse(store.ge
 function loadLevel(i){
   levelIdx=i;L=LEVELS[i];
   bodies=[];hitQ=[];killQ=[];particles=[];floats=[];rings=[];trail=[];lastTrail=[];
-  foesLeft=0;crowBody=null;crowCaught=false;crowEscaped=false;score=0;winTimer=-1;bird=null;birdType=null;aiming=false;
+  foesLeft=0;crowBody=null;crowCaught=false;crowEscaped=false;score=0;winTimer=-1;bird=null;crew=[];flash=0;birdType=null;aiming=false;
   makeWorld();groundChain();L.build(builder);
   simT=0;graceUntil=1.4;
   queue=L.birds.slice();
@@ -298,13 +315,17 @@ function loadNextBird(){
   return true;
 }
 const seenHint={};
+// romani never collide with each other (the maranza splits into three overlapping copies)
+function makeBird(type,x,y,vx,vy,spin){
+  const B=BIRDS[type];
+  const b=world.createBody({type:'dynamic',position:pl.Vec2(x,y),bullet:true});
+  b.createFixture({shape:pl.Circle(B.r),density:B.density,friction:.6,restitution:.25,filterGroupIndex:-1});
+  b.setLinearVelocity(pl.Vec2(vx,vy));b.setAngularVelocity(spin);
+  b.setUserData({kind:'bird',type,r:B.r});bodies.push(b);return b;
+}
 function launch(vx,vy){
-  const B=BIRDS[birdType];
-  const b=world.createBody({type:'dynamic',position:pl.Vec2(SLING.x+pull.x,SLING.y+pull.y),bullet:true});
-  b.createFixture({shape:pl.Circle(B.r),density:B.density,friction:.6,restitution:.25});
-  b.setLinearVelocity(pl.Vec2(vx,vy));b.setAngularVelocity(-vx*.6);
-  b.setUserData({kind:'bird',type:birdType,r:B.r});bodies.push(b);
-  bird=b;state='flying';flyT=0;settleT=0;trail=[];trailT=0;manualCamT=0;
+  bird=makeBird(birdType,SLING.x+pull.x,SLING.y+pull.y,vx,vy,-vx*.6);crew=[];
+  state='flying';flyT=0;settleT=0;trail=[];trailT=0;manualCamT=0;
   sfx.launch();
   if(crowBody&&ud(crowBody).state==='perched')ud(crowBody).nervous=true;
 }
@@ -323,7 +344,38 @@ function usePower(){
     for(const b of bodies){const u=ud(b);if(u.flyer){const q=b.getPosition();if(Math.hypot(q.x-p.x,q.y-p.y)<R)kill(b,'busta');}}
     rings.push({x:p.x,y:p.y,r:.3,max:R,life:.45});
     sfx.bag();toast(pick(['Tiè!','Mo\' ve sistemo io!','Screanzati!']),'shout');
+  }else if(birdType==='maranza'){
+    // two more maranza peel off, fanned above and below the shot
+    const v=bird.getLinearVelocity(),sp=Math.hypot(v.x,v.y)||1,nx=-v.y/sp,ny=v.x/sp;
+    for(const a of [.22,-.22]){const c=Math.cos(a),s=Math.sin(a),o=Math.sign(a)*.5;
+      crew.push(makeBird('maranza',p.x+nx*o,p.y+ny*o,v.x*c-v.y*s,v.x*s+v.y*c,bird.getAngularVelocity()));}
+    for(let i=0;i<12;i++)particles.push({x:p.x,y:p.y,vx:rand(-3,3),vy:rand(-3,3),life:.4,max:.4,col:'#ffd23a',size:.1});
+    sfx.split();toast(pick(['Fratè, annamo!','Zì, guarda qua!','Semo tre, fratè!']),'shout');
+  }else if(birdType==='tassista'){
+    // the horn blast: a cone ahead of the taxi driver shoves everything and shatters glass
+    const v=bird.getLinearVelocity(),sp=Math.hypot(v.x,v.y)||1,fx=v.x/sp,fy=v.y/sp,R=5.5;
+    for(const b of bodies){if(b===bird)continue;const u=ud(b),q=b.getPosition(),dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy);
+      if(d>R||d<.01||(dx*fx+dy*fy)/d<.55)continue;const k=1-d/R;
+      if(u.flyer||u.state==='flying'){kill(b,'clacson');continue;}
+      if(!b.isDynamic()||u.kind==='bird')continue;
+      const m=Math.min(b.getMass(),3);b.applyLinearImpulse(pl.Vec2(dx/d*k*10*m,dy/d*k*10*m+k*2*m),q,true);
+      damage(b,u.mat==='glass'?99:14*k,q.x,q.y);}
+    for(let i=0;i<3;i++)rings.push({x:p.x,y:p.y,r:.3+i*.5,max:R-i*1.2,life:.5,dir:Math.atan2(fy,fx),horn:true});
+    sfx.horn();toast(pick(['Aò! Te movi?','Ma \'ndo vai?!','Daje, c\'ho fretta!']),'shout');
+  }else if(birdType==='turista'){
+    // the selfie flash: gulls nearby leap off in fright, anything that flies is dazzled and drops
+    const R=6;flash=1;
+    for(const b of bodies){const u=ud(b);if(u.kind!=='foe'||u.dead)continue;const q=b.getPosition();if(Math.hypot(q.x-p.x,q.y-p.y)>R)continue;
+      if(u.flyer||u.type==='crow'){daze(b);continue;}
+      const m=b.getMass();b.applyLinearImpulse(pl.Vec2((q.x>=p.x?1:-1)*rand(1.5,3)*m,rand(4,6)*m),q,true);damage(b,1,q.x,q.y);}
+    sfx.shutter();toast(pick(['Cheese!','Bellissimo!','Selfie!']),'shout');
   }
+}
+// dazzled flyers stop flying and tumble; the first real knock finishes them
+function daze(b){
+  const u=ud(b);if(!b.isDynamic()){b.setType('dynamic');b.setLinearVelocity(pl.Vec2(0,-1));}
+  u.flyer=false;u.state='dazed';u.dazed=true;b.setAwake(true);
+  b.applyLinearImpulse(pl.Vec2(rand(-1,1)*b.getMass(),3*b.getMass()),b.getPosition(),true);b.setAngularVelocity(rand(-5,5));
 }
 
 // ---------- damage & destruction ----------
@@ -365,7 +417,7 @@ function processKills(){
       if(foesLeft<=0&&winTimer<0)winTimer=1.4;
     }else if(u.kind==='bird'){
       for(let k=0;k<10;k++)particles.push({x:p.x,y:p.y,vx:rand(-2,2),vy:rand(0,3),life:.6,max:.6,col:'#fff8e8',size:rand(.1,.25)});
-      if(b===bird)bird=null;
+      if(b===bird)bird=null;else crew=crew.filter(c=>c!==b);
     }
   }
 }
@@ -373,7 +425,7 @@ function processHits(){
   for(const h of hitQ){
     const ua=ud(h.A),ub=ud(h.B);
     // flying foes die on any real touch from a moving body
-    for(const [f,o] of [[h.A,h.B],[h.B,h.A]]){const uf=ud(f);if((uf.flyer||uf.state==='flying')&&o.isDynamic()&&h.vrel>1.2)kill(f,'hit');}
+    for(const [f,o] of [[h.A,h.B],[h.B,h.A]]){const uf=ud(f);if((uf.flyer||uf.state==='flying')&&o.isDynamic()&&h.vrel>1.2)kill(f,'hit');if(uf.dazed&&h.vrel>1)kill(f,'hit');}
     if(h.E>.5){damage(h.A,h.E,h.x,h.y);damage(h.B,h.E,h.x,h.y);}
     if(h.E>2)sfx.thud(Math.min(1,h.E/60));
     if(h.E>30&&(ua.kind==='bird'||ub.kind==='bird'))shake=Math.max(shake,Math.min(.35,h.E/400));
@@ -411,7 +463,8 @@ function step(dt){
   if(state==='flying'||state==='settle'){
     flyT+=dt;
     if(bird){const p=bird.getPosition();trailT+=dt;if(trailT>.045){trailT=0;trail.push([p.x,p.y]);}
-      const v=bird.getLinearVelocity();if(Math.hypot(v.x,v.y)<.3&&flyT>1){bird.slowT=(bird.slowT||0)+dt;if(bird.slowT>1.2)queueKill(bird,'poof');}else bird.slowT=0;}
+    }
+    for(const b of bird?[bird,...crew]:crew){const v=b.getLinearVelocity();if(Math.hypot(v.x,v.y)<.3&&flyT>1){b.slowT=(b.slowT||0)+dt;if(b.slowT>1.2)queueKill(b,'poof');}else b.slowT=0;}
     let moving=false;for(const b of bodies){if(!b.isDynamic()||!b.isAwake())continue;const v=b.getLinearVelocity();if(Math.hypot(v.x,v.y)>.25||Math.abs(b.getAngularVelocity())>.4){moving=true;break;}}
     settleT=moving?0:settleT+dt;
     if(!bird&&state==='flying')state='settle';
@@ -426,7 +479,7 @@ function step(dt){
 }
 function endTurn(){
   if(state!=='flying'&&state!=='settle')return;
-  if(bird){queueKill(bird,'poof');processKills();}
+  if(bird)queueKill(bird,'poof');for(const c of crew)queueKill(c,'poof');processKills();
   lastTrail=trail;trail=[];
   if(foesLeft<=0){if(winTimer<0)winTimer=.3;state='waiting';return;}
   if(queue.length){loadNextBird();}
@@ -605,6 +658,9 @@ function drawBlock(b,u){
 const SPRITES={
   ciclista:{cx:.465,cy:.605,r:.379,col:'#c4302b'},
   nonna:{cx:.536,cy:.617,r:.364,col:'#8a7aa8'},
+  maranza:{cx:.515,cy:.621,r:.372,col:'#2b2b2e'},
+  tassista:{cx:.439,cy:.615,r:.345,col:'#f2f0ea'},
+  turista:{cx:.426,cy:.606,r:.364,col:'#ef7f86'},
   gabbiano:{cx:.492,cy:.549,r:.375,col:'#f6f6f2'},
   corvo:{cx:.536,cy:.524,r:.384,col:'#232326'},
   pappagallo:{cx:.628,cy:.547,r:.35,col:'#46c44a'},
@@ -636,6 +692,8 @@ function drawFoe(b,u,t){
   drawSprite(FOE_SPRITE[u.type],r,flip,flying?1+Math.sin(t*(u.flyer?30:20))*.07:1);
   if(u.hp<u.max*.5)plaster(r);
   ctx.restore();
+  // dazzled by the flash: little stars spinning over the head
+  if(u.dazed){ctx.fillStyle='#ffd23a';for(let i=0;i<3;i++){const a=t*6+i*2.1;ctx.beginPath();ctx.arc(p.x+Math.cos(a)*r*.8,p.y+r*1.1+Math.sin(a)*r*.25,r*.13,0,7);ctx.fill();}}
 }
 function draw(t){
   drawSky();drawGround();
@@ -658,12 +716,15 @@ function draw(t){
     if(q.line){ctx.strokeStyle=q.col;ctx.lineWidth=.05;ctx.beginPath();ctx.moveTo(q.x,q.y);ctx.lineTo(q.x-q.vx*.05,q.y-q.vy*.05);ctx.stroke();}
     else{ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.rot||0);if(q.feather){ctx.beginPath();ctx.ellipse(0,0,q.size*1.6,q.size*.5,0,0,7);ctx.fill();}else ctx.fillRect(-q.size/2,-q.size/2,q.size,q.size);ctx.restore();}}
   ctx.globalAlpha=1;
-  for(const r of rings){ctx.strokeStyle=r.fire?`rgba(255,140,40,${r.life*2})`:`rgba(255,255,255,${r.life*2})`;ctx.lineWidth=.15;ctx.beginPath();ctx.arc(r.x,r.y,r.r,0,7);ctx.stroke();}
+  for(const r of rings){ctx.strokeStyle=r.fire?`rgba(255,140,40,${r.life*2})`:r.horn?`rgba(255,210,58,${r.life*2})`:`rgba(255,255,255,${r.life*2})`;ctx.lineWidth=.15;ctx.beginPath();
+    if(r.dir!=null)ctx.arc(r.x,r.y,r.r,r.dir-.9,r.dir+.9);else ctx.arc(r.x,r.y,r.r,0,7);ctx.stroke();}
   // score popups, upright in screen space
   screenTransform();
   ctx.textAlign='center';
   for(const f of floats){const [sx,sy]=toS(f.x,f.y);ctx.globalAlpha=clamp(f.life,0,1);ctx.font=`800 ${f.big?22:15}px Rubik, system-ui, sans-serif`;ctx.lineWidth=4;ctx.strokeStyle='rgba(29,20,16,.8)';ctx.strokeText(f.txt,sx,sy);ctx.fillStyle=f.big?'#ffd23a':'#fff';ctx.fillText(f.txt,sx,sy);}
   ctx.globalAlpha=1;
+  // the tourist's camera flash
+  if(flash>0){ctx.fillStyle=`rgba(255,255,255,${flash*(reduceMotion?.35:.85)})`;ctx.fillRect(0,0,cw,ch);}
 }
 function addFloat(x,y,pts,big){floats.push({x,y,txt:String(pts),big,life:1.2});}
 
@@ -698,6 +759,9 @@ const sfx={ctx:null,muted:store.get('fionda-mute')==='1',
   launch(){this.noise(.25,.5,900,.7);this.tone(260,.2,'triangle',.12,520);},
   dash(){this.tone(500,.25,'sawtooth',.06,1400);},
   bag(){this.noise(.3,.7,300);this.tone(120,.25,'square',.08,60);},
+  split(){[0,.06,.12].forEach(d=>this.tone(700,.12,'square',.04,1100,d));},
+  horn(){for(const [d,l] of [[0,.14],[.2,.45]]){this.tone(370,l,'square',.06,null,d);this.tone(466,l,'square',.05,null,d);}},
+  shutter(){this.noise(.06,.5,3200,2);this.tone(1900,.05,'square',.03);this.noise(.05,.4,2400,2);},
   thud(k){this.noise(.12,.25+k*.6,180+k*200);},
   crack(m){m==='stone'?this.noise(.25,.6,350,2):this.noise(.18,.5,700,3);},
   glass(){this.noise(.35,.5,4200,4);this.tone(2600,.2,'sine',.04,3200);},
@@ -745,7 +809,7 @@ function frame(now){
   let dt=Math.min(.05,(now-last)/1000);last=now;clock+=dt;
   if(state!=='paused'){
     acc+=dt;while(acc>=1/60){if(state!=='menu')step(1/60);acc-=1/60;}
-    shake=Math.max(0,shake-dt);
+    shake=Math.max(0,shake-dt);flash=Math.max(0,flash-dt*2.5);
     if(state!=='menu'&&state!=='result')updateCam(dt);
     if(state==='flying'||state==='settle')renderScore();
   }
