@@ -490,34 +490,27 @@ const toW=(sx,sy)=>[(sx-cw/2)/cam.s+cam.x,(groundY-sy)/cam.s+cam.y];
 function worldTransform(){const sx=reduceMotion?0:(Math.random()-.5)*shake*14,sy=reduceMotion?0:(Math.random()-.5)*shake*14;
   ctx.setTransform(cam.s*dpr,0,0,-cam.s*dpr,(cw/2-cam.x*cam.s+sx)*dpr,(groundY+cam.y*cam.s+sy)*dpr);}
 function screenTransform(){ctx.setTransform(dpr,0,0,dpr,0,0);}
-// houses get a warm haze baked in once, so the fort and the characters read in front of them
-const CASE={img:new Image(),h:12,haze:.3,cv:null};
-CASE.img.onload=()=>{const im=CASE.img,c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const g=c.getContext('2d');
-  g.drawImage(im,0,0);g.globalCompositeOperation='source-atop';g.fillStyle=`rgba(247,226,196,${CASE.haze})`;g.fillRect(0,0,c.width,c.height);CASE.cv=c;};
-CASE.img.src='assets/sfondi/trastevere-case.webp';
+// background strips, far to near: each tiles along the street (cut where its edges match, so the seam hides),
+// scrolls at its own depth and gets a warm haze baked in once, so the fort and the characters read in front
+function strip(src,h,depth,haze){const S={h,depth,cv:null},im=new Image();
+  im.onload=()=>{const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const g=c.getContext('2d');
+    g.drawImage(im,0,0);g.globalCompositeOperation='source-atop';g.fillStyle=`rgba(247,226,196,${haze})`;g.fillRect(0,0,c.width,c.height);S.cv=c;};
+  im.src=src;return S;}
+const STRIPS=[
+  strip('assets/sfondi/trastevere-fondale.webp',22,.2,.12), // San Pietro, Santa Maria in Trastevere, pines: about one tile per screen
+  strip('assets/sfondi/trastevere-case.webp',12,.6,.3),     // the row of houses
+];
 const skyGrad=()=>{const g=ctx.createLinearGradient(0,0,0,ch);g.addColorStop(0,'#3f97e0');g.addColorStop(.55,'#9fd0f0');g.addColorStop(.85,'#f7dfba');g.addColorStop(1,'#f2cf9e');return g;};
 function drawSky(){
   screenTransform();ctx.fillStyle=skyGrad();ctx.fillRect(0,0,cw,ch);
   // sun
   ctx.fillStyle='rgba(255,244,214,.9)';ctx.beginPath();ctx.arc(cw*.82,ch*.2,Math.min(cw,ch)*.07,0,7);ctx.fill();
-  // far skyline with parallax
-  const P=(px,depth)=>(px-cam.x*depth)*cam.s*.55+cw/2;
-  const base=groundY+cam.y*cam.s*.3;
-  const unit=cam.s*.55;
-  ctx.fillStyle='rgba(214,170,140,.55)';
-  // Colosseo
-  const cx=P(30,.3);ctx.fillRect(cx-9*unit,base-9*unit,18*unit,9*unit);
-  ctx.fillStyle='rgba(160,115,95,.45)';for(let r=0;r<3;r++)for(let i=0;i<10;i++){ctx.beginPath();const ax=cx-8.4*unit+i*1.75*unit,ay=base-(2.6+r*2.8)*unit;ctx.moveTo(ax,ay+1.9*unit);ctx.lineTo(ax,ay+.6*unit);ctx.arc(ax+.5*unit,ay+.6*unit,.5*unit,Math.PI,0);ctx.lineTo(ax+unit,ay+1.9*unit);ctx.fill();}
-  // San Pietro dome
-  ctx.fillStyle='rgba(200,160,140,.5)';const dx=P(-2,.25);ctx.fillRect(dx-3*unit,base-6*unit,6*unit,6*unit);ctx.beginPath();ctx.arc(dx,base-6*unit,3.2*unit,Math.PI,0);ctx.fill();ctx.fillRect(dx-.4*unit,base-10.6*unit,.8*unit,1.6*unit);
-  // umbrella pines and cypresses
-  ctx.fillStyle='rgba(110,130,90,.55)';
-  for(const [x,h] of [[8,7],[14,8.5],[44,7.5],[52,8],[60,7]]){const px=P(x,.35);ctx.fillRect(px-.18*unit,base-h*unit,.36*unit,h*unit);ctx.beginPath();ctx.ellipse(px,base-h*unit,3*unit,1.1*unit,0,0,7);ctx.fill();}
-  // near layer: the row of Trastevere houses, tiled along the street (strip cut between two drainpipes so the seam hides)
-  const im=CASE.cv;if(!im)return;
-  const hh=CASE.h*cam.s*.8,tw=hh*im.width/im.height;
-  let x0=(-cam.x*.6)*cam.s*.8+cw/2;x0-=Math.ceil(x0/tw)*tw;
-  for(let x=x0;x<cw;x+=tw)ctx.drawImage(im,x,base-hh,tw+.5,hh);
+  const base=groundY+cam.y*cam.s*.3,u=cam.s*.8;
+  for(const S of STRIPS){if(!S.cv)continue;
+    const hh=S.h*u,tw=hh*S.cv.width/S.cv.height;
+    // a tile sits centred on screen while the camera is at the sling
+    let x=-(cam.x-camMin())*S.depth*u+(cw-tw)/2;x-=Math.ceil(x/tw)*tw;
+    for(;x<cw;x+=tw)ctx.drawImage(S.cv,x,base-hh,tw+.5,hh);}
 }
 function drawGround(){
   worldTransform();
