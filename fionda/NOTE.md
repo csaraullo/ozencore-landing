@@ -1,6 +1,7 @@
-# Daje de Fionda: dove siamo
+# Fat Angry Seagull (ex Daje de Fionda): dove siamo
 
 Gioco alla Angry Birds ambientato a Roma, in 2D. I romani tirati con la fionda contro i gabbiani che hanno rubato la spesa alla nonna.
+Dal 25/10/2026 si chiama **Fat Angry Seagull** (titolo e menu). La cartella e l'indirizzo restano `fionda/`, come le chiavi dei record salvati (`fionda-stars`, `fionda-best`, `fionda-mute`), così nessuno perde i progressi.
 
 ## Stato
 - `fionda/index.html`: prototipo giocabile (grafica semplice disegnata via codice, canvas 2D + fisica Planck.js in `fionda/lib/`).
